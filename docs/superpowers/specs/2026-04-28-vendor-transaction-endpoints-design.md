@@ -100,7 +100,6 @@ X-Vendor-Id: <string>
 
 **Transaction Entity** (`Domain/Entities/Transaction.cs`):
 - Primary key: `Id` (Guid)
-- `TransactionId` (Guid) — auto-generated on insert
 - `OperationId` (string) — from request root
 - `VendorId` (string) — from header, stored in DB
 - `BagId` (string) — root-level bag identifier
@@ -268,5 +267,5 @@ DbUpdateException (constraint violation)?
 - **Unique constraint implementation:** Using EF Core index on (BagId, OperationId, Currency, VendorId)
 - **Bag collection uniqueness within a request:** Multiple bags with the same Currency in a single request will fail the DB constraint
 - **Transaction status tracking:** Not included in initial scope; all transactions are recorded as-is
-- **Timestamp generation:** CreatedAt and ModifiedAt are set by the application layer (handler) or database defaults
+- **Timestamp generation:** CreatedAt and ModifiedAt are set on entity creation and tracked by EF Core
 
