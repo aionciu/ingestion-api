@@ -1,3 +1,5 @@
+using IngestionApi.Application.Common;
+using IngestionApi.Application.Features.Transactions.Commands;
 using IngestionApi.Domain.Common;
 using IngestionApi.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +18,10 @@ public static class DependencyInjection
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        // Register command handlers
+        services.AddScoped<ICommandHandler<CreateTransactionTCommand>, CreateTransactionTCommandHandler>();
+        services.AddScoped<ICommandHandler<CreateTransactionT1Command>, CreateTransactionT1CommandHandler>();
 
         return services;
     }

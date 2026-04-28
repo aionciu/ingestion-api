@@ -32,7 +32,9 @@
       "Bash(git checkout *)",
       "Bash(xargs grep *)",
       "PowerShell(New-Item *)",
-      "Bash(dotnet ef migrations *)"
+      "Bash(dotnet ef migrations *)",
+      "Bash(dotnet ef database *)",
+      "Bash(tee test_output.log)"
     ]
   }
 }
