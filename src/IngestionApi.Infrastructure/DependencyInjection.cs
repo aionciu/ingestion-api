@@ -1,5 +1,3 @@
-using IngestionApi.Application.Common;
-using IngestionApi.Application.Features.Transactions.Commands;
 using IngestionApi.Domain.Common;
 using IngestionApi.Domain.Entities;
 using IngestionApi.Infrastructure.Persistence;
@@ -27,10 +25,6 @@ public static class DependencyInjection
 
         // Register repositories
         services.AddScoped<IRepository<Transaction, Guid>, GenericRepository<Transaction, Guid>>();
-
-        // Register command handlers
-        services.AddScoped<ICommandHandler<CreateTransactionTCommand>, CreateTransactionTCommandHandler>();
-        services.AddScoped<ICommandHandler<CreateTransactionT1Command>, CreateTransactionT1CommandHandler>();
 
         return services;
     }
