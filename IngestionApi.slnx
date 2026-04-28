@@ -7,5 +7,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/IngestionApi.Tests.Unit/IngestionApi.Tests.Unit.csproj" />
+    <Project Path="tests/IngestionApi.Tests.Integration/IngestionApi.Tests.Integration.csproj" />
   </Folder>
 </Solution>
