@@ -35,7 +35,22 @@ public class ExceptionHandlingMiddleware
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = statusCode;
 
-        var response = new { error = exception.Message };
+        object response;
+        if (statusCode is StatusCodes.Status422UnprocessableEntity or StatusCodes.Status400BadRequest)
+        {
+            // Safe to expose message for known validation/argument errors
+            response = new { error = exception.Message };
+        }
+        else if (statusCode == StatusCodes.Status503ServiceUnavailable)
+        {
+            response = new { detail = "Service temporarily unavailable" };
+        }
+        else
+        {
+            var correlationId = context.Items["CorrelationId"]?.ToString() ?? string.Empty;
+            response = new { detail = "Internal error", traceId = correlationId };
+        }
+
         await context.Response.WriteAsJsonAsync(response);
     }
 
