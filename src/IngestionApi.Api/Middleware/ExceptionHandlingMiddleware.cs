@@ -30,7 +30,7 @@ public class ExceptionHandlingMiddleware
     {
         var (severity, statusCode) = CategorizeException(exception);
 
-        _logger.Log(severity, exception, "Unhandled exception: {ExceptionType}", exception.GetType().Name);
+        _logger.Log(severity, exception, "Unhandled exception: {ExceptionType} → {StatusCode}", exception.GetType().Name, statusCode);
 
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = statusCode;
