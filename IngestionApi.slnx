@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/IngestionApi.Api/IngestionApi.Api.csproj" />
+    <Project Path="src/IngestionApi.Application/IngestionApi.Application.csproj" />
+    <Project Path="src/IngestionApi.Domain/IngestionApi.Domain.csproj" />
+    <Project Path="src/IngestionApi.Infrastructure/IngestionApi.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/IngestionApi.Tests.Unit/IngestionApi.Tests.Unit.csproj" />
+  </Folder>
+</Solution>

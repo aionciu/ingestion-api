@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"c:\\\\Users\\\\ionci\\\\source\\\\.net\\\\ingestion-api\" log --oneline -5)",
+      "Bash(git -C \"c:\\\\Users\\\\ionci\\\\source\\\\.net\\\\ingestion-api\" ls-files)",
+      "Bash(dotnet new *)",
+      "Bash(dotnet sln *)",
+      "Bash(dotnet add *)",
+      "Bash(dotnet build *)",
+      "Bash(dotnet test *)",
+      "Bash(dotnet restore *)",
+      "Bash(timeout 10 dotnet run --project src/IngestionApi.Api)",
+      "Bash(timeout 15 dotnet run --project src/IngestionApi.Api)",
+      "Bash(timeout 15 dotnet run --no-launch-profile)"
+    ]
+  }
+}
