@@ -29,7 +29,7 @@ public class CreateTransactionTValidatorTests
         var command = new CreateTransactionTCommand("OP123", "BAG123",
             new List<BagDto> { new(0m, 0m, 0m, "USD") }, "V123");
         var result = _validator.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.Bags);
+        result.ShouldHaveValidationErrorFor("Bags[0].DeclaredValue");
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public class CreateTransactionTValidatorTests
         var command = new CreateTransactionTCommand("OP123", "BAG123",
             new List<BagDto> { new(100m, 50m, 0m, "USD") }, "V123");
         var result = _validator.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.Bags);
+        result.ShouldHaveValidationErrorFor("Bags[0].ProcessedValue");
     }
 
     [Fact]
@@ -47,7 +47,7 @@ public class CreateTransactionTValidatorTests
         var command = new CreateTransactionTCommand("OP123", "BAG123",
             new List<BagDto> { new(100m, 0m, 10m, "USD") }, "V123");
         var result = _validator.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.Bags);
+        result.ShouldHaveValidationErrorFor("Bags[0].DifferenceValue");
     }
 
     [Fact]
