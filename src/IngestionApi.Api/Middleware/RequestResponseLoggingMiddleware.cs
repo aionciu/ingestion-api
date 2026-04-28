@@ -20,12 +20,6 @@ public class RequestResponseLoggingMiddleware
 
         _logger.LogInformation("{Method} {Path} started", method, path);
 
-        // For transaction endpoints, capture request body for audit
-        if (IsTransactionEndpoint(path))
-        {
-            await CaptureRequestBody(context);
-        }
-
         var stopwatch = Stopwatch.StartNew();
         await _next(context);
         stopwatch.Stop();
@@ -39,21 +33,5 @@ public class RequestResponseLoggingMiddleware
 
         _logger.Log(logLevel, "{Method} {Path} completed in {ElapsedMs}ms with status {StatusCode}",
             method, path, elapsedMs, statusCode);
-    }
-
-    private static bool IsTransactionEndpoint(PathString path)
-    {
-        return path.StartsWithSegments("/api/transactions", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static async Task CaptureRequestBody(HttpContext context)
-    {
-        context.Request.EnableBuffering();
-        var reader = new StreamReader(context.Request.Body);
-        var body = await reader.ReadToEndAsync();
-        context.Request.Body.Position = 0;
-
-        var logger = context.RequestServices.GetRequiredService<ILogger<RequestResponseLoggingMiddleware>>();
-        logger.LogInformation("Transaction payload received: {Payload}", body);
     }
 }
