@@ -1,4 +1,3 @@
-using FluentValidation;
 using IngestionApi.Application.Common;
 using IngestionApi.Application.Features.Transactions.DTOs;
 using IngestionApi.Domain.Common;
@@ -18,33 +17,21 @@ public class CreateTransactionT1CommandHandler : ICommandHandler<CreateTransacti
     private readonly ILogger<CreateTransactionT1CommandHandler> _logger;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IRepository<Transaction, Guid> _repository;
-    private readonly IValidator<CreateTransactionT1Command> _validator;
 
     public CreateTransactionT1CommandHandler(
         ILogger<CreateTransactionT1CommandHandler> logger,
         IUnitOfWork unitOfWork,
-        IRepository<Transaction, Guid> repository,
-        IValidator<CreateTransactionT1Command> validator)
+        IRepository<Transaction, Guid> repository)
     {
         _logger = logger;
         _unitOfWork = unitOfWork;
         _repository = repository;
-        _validator = validator;
     }
 
     public async Task<Result> HandleAsync(CreateTransactionT1Command command, CancellationToken cancellationToken)
     {
         _logger.LogInformation("T+1 transaction received from vendor {VendorId} with operation {OperationId}",
             command.VendorId, command.OperationId);
-
-        // Validate command
-        var validationResult = await _validator.ValidateAsync(command, cancellationToken);
-        if (!validationResult.IsValid)
-        {
-            _logger.LogWarning("T+1 transaction {OperationId} failed validation: {Errors}",
-                command.OperationId, string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage)));
-            return Result.ValidationFailure();
-        }
 
         try
         {
