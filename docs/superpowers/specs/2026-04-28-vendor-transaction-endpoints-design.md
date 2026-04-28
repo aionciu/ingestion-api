@@ -94,6 +94,25 @@ X-Vendor-Id: <string>
 
 ---
 
+## Data Model Transformation
+
+**Key behavior:** Each bag in the request is expanded into **3 separate transaction rows** in the database:
+- One row for DeclaredValue (TransactionType = 1)
+- One row for ProcessedValue (TransactionType = 2)
+- One row for DifferenceValue (TransactionType = 3)
+
+**Example:**
+```
+Request: { operationId: "OP002", bagId: "BAG002", bags: [{ declaredValue: 1000, processedValue: 500, differenceValue: 100, currency: "EUR" }] }
+
+Database creates 3 rows:
+Row 1: { operationId: "OP002", bagId: "BAG002", vendorId: "V123", currency: "EUR", value: 1000, transactionType: 1, ... }
+Row 2: { operationId: "OP002", bagId: "BAG002", vendorId: "V123", currency: "EUR", value: 500, transactionType: 2, ... }
+Row 3: { operationId: "OP002", bagId: "BAG002", vendorId: "V123", currency: "EUR", value: 100, transactionType: 3, ... }
+```
+
+---
+
 ## Architecture & Design
 
 ### Domain Layer
@@ -102,10 +121,12 @@ X-Vendor-Id: <string>
 - Primary key: `Id` (Guid)
 - `OperationId` (string) — from request root
 - `VendorId` (string) — from header, stored in DB
-- `BagId` (string) — root-level bag identifier
+- `BagId` (string) — root-level bag identifier (money identification)
+- `Currency` (string) — from bag
+- `Value` (decimal) — the monetary value (DeclaredValue, ProcessedValue, or DifferenceValue)
+- `TransactionType` (int) — 1=DeclaredValue, 2=ProcessedValue, 3=DifferenceValue
 - `CreatedAt` (DateTime) — set on insert
 - `ModifiedAt` (DateTime) — set on insert, updated on any modification
-- `Bags` (ICollection<Bag>) — value objects
 
 **Bag Value Object** (`Domain/ValueObjects/Bag.cs`):
 - `DeclaredValue` (decimal)
@@ -130,18 +151,22 @@ X-Vendor-Id: <string>
 Both handlers:
 1. Receive the command with VendorId (extracted from header by controller)
 2. Validate via FluentValidation (automatic, before handler execution)
-3. Persist via `IUnitOfWork.SaveChangesAsync()`
-4. Catch `DbUpdateException` (from duplicate constraint violation) → return `Result.Conflict()`
-5. Return `Result.Success()` on success
+3. **Expand each bag into 3 separate Transaction entities:**
+   - Create Transaction with Value=DeclaredValue, TransactionType=1
+   - Create Transaction with Value=ProcessedValue, TransactionType=2
+   - Create Transaction with Value=DifferenceValue, TransactionType=3
+4. Persist all transactions via `IUnitOfWork.SaveChangesAsync()`
+5. Catch `DbUpdateException` (from duplicate constraint violation) → return `Result.Conflict()`
+6. Return `Result.Success()` on success
 
 ### Infrastructure Layer
 
 **Entity Configuration** (`Persistence/Configurations/TransactionConfiguration.cs`):
-- Configures `Transaction` and `Bag` via `IEntityTypeConfiguration<Transaction>`
-- Adds unique constraint per bag on **(BagId, OperationId, Currency, VendorId)**
-  - Since each bag in a transaction has a different `Currency`, the uniqueness applies per bag
-  - Implemented via EF Core unique index on the relationship between Transaction and Bag
-  - Multiple bags in the same request can have different currencies and will each be checked individually
+- Configures `Transaction` via `IEntityTypeConfiguration<Transaction>`
+- Maps properties: Id (key), OperationId, VendorId, BagId, Currency, Value, TransactionType, CreatedAt, ModifiedAt
+- Adds unique constraint on **(BagId, OperationId, Currency, VendorId, TransactionType)**
+  - Since each bag expands into 3 rows (one per TransactionType), this ensures no duplicate (bag, operation, currency, vendor, type) combinations
+  - Implemented via EF Core unique index on these five columns
 
 **Repository:**
 - Uses generic `IRepository<Transaction, Guid>` (inherited from base)
@@ -190,7 +215,7 @@ POST /api/vendor-transactions/T (or T+1)
   ↓
 [Header Extraction: X-Vendor-Id]
   ↓
-[Request Body Binding]
+[Request Body Binding: bags array]
   ↓
 [Create Command with VendorId]
   ↓
@@ -202,7 +227,10 @@ Validation passes?
   ├─ NO → 400 Bad Request (error details)
   └─ YES → Continue
   ↓
-[Create Transaction Entity, set Bags]
+[For each bag, create 3 Transaction entities]
+  - Transaction 1: Value=DeclaredValue, TransactionType=1
+  - Transaction 2: Value=ProcessedValue, TransactionType=2
+  - Transaction 3: Value=DifferenceValue, TransactionType=3
   ↓
 [IUnitOfWork.SaveChangesAsync()]
   ↓
