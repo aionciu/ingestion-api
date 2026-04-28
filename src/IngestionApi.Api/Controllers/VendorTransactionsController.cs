@@ -1,4 +1,5 @@
 using FluentValidation;
+using IngestionApi.Api.Contracts;
 using IngestionApi.Application.Common;
 using IngestionApi.Application.Features.Transactions.Commands;
 using IngestionApi.Application.Features.Transactions.DTOs;
@@ -107,14 +108,3 @@ public class VendorTransactionsController : ControllerBase
         };
     }
 }
-
-public record CreateTransactionRequest(
-    string OperationId,
-    string BagId,
-    List<BagItemDto> Bags);
-
-public record BagItemDto(
-    decimal DeclaredValue,
-    decimal ProcessedValue,
-    decimal DifferenceValue,
-    string Currency);

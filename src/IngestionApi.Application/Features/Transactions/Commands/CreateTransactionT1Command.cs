@@ -45,7 +45,7 @@ public class CreateTransactionT1CommandHandler : ICommandHandler<CreateTransacti
                     BagId = command.BagId,
                     Currency = bag.Currency,
                     Value = bag.DeclaredValue,
-                    TransactionType = 1
+                    TransactionType = TransactionType.Declared
                 },
                 new Transaction
                 {
@@ -54,7 +54,7 @@ public class CreateTransactionT1CommandHandler : ICommandHandler<CreateTransacti
                     BagId = command.BagId,
                     Currency = bag.Currency,
                     Value = bag.ProcessedValue,
-                    TransactionType = 2
+                    TransactionType = TransactionType.Processed
                 },
                 new Transaction
                 {
@@ -63,7 +63,7 @@ public class CreateTransactionT1CommandHandler : ICommandHandler<CreateTransacti
                     BagId = command.BagId,
                     Currency = bag.Currency,
                     Value = bag.DifferenceValue,
-                    TransactionType = 3
+                    TransactionType = TransactionType.Difference
                 }
             }).ToList();
             _repository.AddRange(transactions);

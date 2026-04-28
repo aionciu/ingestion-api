@@ -44,7 +44,7 @@ public class CreateTransactionTCommandHandler : ICommandHandler<CreateTransactio
                 BagId = command.BagId,
                 Currency = bag.Currency,
                 Value = bag.DeclaredValue,
-                TransactionType = 1 // DeclaredValue
+                TransactionType = TransactionType.Declared
             }).ToList();
             _repository.AddRange(transactions);
 
