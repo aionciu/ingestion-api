@@ -38,5 +38,10 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
 
         builder.Property(t => t.ModifiedAt)
             .HasDefaultValueSql("GETUTCDATE()");
+
+        // Unique constraint: (BagId, OperationId, Currency, VendorId, TransactionType)
+        builder.HasIndex(t => new { t.BagId, t.OperationId, t.Currency, t.VendorId, t.TransactionType })
+            .IsUnique()
+            .HasDatabaseName("IX_Transaction_BagOpCurrVendorType");
     }
 }

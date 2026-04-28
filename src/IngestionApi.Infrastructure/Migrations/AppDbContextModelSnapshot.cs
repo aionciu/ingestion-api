@@ -38,6 +38,11 @@ namespace IngestionApi.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
 
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
                     b.Property<DateTime>("ModifiedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -48,6 +53,12 @@ namespace IngestionApi.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<int>("TransactionType")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Value")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("VendorId")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -55,51 +66,11 @@ namespace IngestionApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BagId", "OperationId", "VendorId")
+                    b.HasIndex("BagId", "OperationId", "Currency", "VendorId", "TransactionType")
                         .IsUnique()
-                        .HasDatabaseName("IX_Transaction_BagOpVendor");
+                        .HasDatabaseName("IX_Transaction_BagOpCurrVendorType");
 
                     b.ToTable("Transaction");
-                });
-
-            modelBuilder.Entity("IngestionApi.Domain.Entities.Transaction", b =>
-                {
-                    b.OwnsMany("IngestionApi.Domain.ValueObjects.Bag", "Bags", b1 =>
-                        {
-                            b1.Property<int>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("int");
-
-                            SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"));
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .HasMaxLength(3)
-                                .HasColumnType("nvarchar(3)");
-
-                            b1.Property<decimal>("DeclaredValue")
-                                .HasColumnType("decimal(18,2)");
-
-                            b1.Property<decimal>("DifferenceValue")
-                                .HasColumnType("decimal(18,2)");
-
-                            b1.Property<decimal>("ProcessedValue")
-                                .HasColumnType("decimal(18,2)");
-
-                            b1.Property<Guid>("TransactionId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.HasKey("Id");
-
-                            b1.HasIndex("TransactionId");
-
-                            b1.ToTable("TransactionBags", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("TransactionId");
-                        });
-
-                    b.Navigation("Bags");
                 });
 #pragma warning restore 612, 618
         }
