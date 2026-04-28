@@ -32,11 +32,10 @@ X-Vendor-Id: <string>
 ### Request Body (both endpoints)
 ```json
 {
-  "transactionId": "string",
+  "operationId": "string",
   "bagId": "string",
   "bags": [
     {
-      "operationId": "string",
       "declaredValue": "decimal",
       "processedValue": "decimal",
       "differenceValue": "decimal",
@@ -101,13 +100,15 @@ X-Vendor-Id: <string>
 
 **Transaction Entity** (`Domain/Entities/Transaction.cs`):
 - Primary key: `Id` (Guid)
+- `TransactionId` (Guid) — auto-generated on insert
+- `OperationId` (string) — from request root
 - `VendorId` (string) — from header, stored in DB
-- `TransactionId` (string) — request identifier
 - `BagId` (string) — root-level bag identifier
+- `CreatedAt` (DateTime) — set on insert
+- `ModifiedAt` (DateTime) — set on insert, updated on any modification
 - `Bags` (ICollection<Bag>) — value objects
 
 **Bag Value Object** (`Domain/ValueObjects/Bag.cs`):
-- `OperationId` (string)
 - `DeclaredValue` (decimal)
 - `ProcessedValue` (decimal)
 - `DifferenceValue` (decimal)
@@ -138,9 +139,10 @@ Both handlers:
 
 **Entity Configuration** (`Persistence/Configurations/TransactionConfiguration.cs`):
 - Configures `Transaction` and `Bag` via `IEntityTypeConfiguration<Transaction>`
-- Adds unique constraint on **(BagId, OperationId, Currency, VendorId)**
-  - Uses Fluent API: `.HasAlternateKey(t => new { t.BagId, t.Bags.Select(b => b.OperationId), t.Bags.Select(b => b.Currency), t.VendorId })`
-  - **Note:** EF Core composite keys across owned collections require careful mapping; may use a computed unique index instead
+- Adds unique constraint per bag on **(BagId, OperationId, Currency, VendorId)**
+  - Since each bag in a transaction has a different `Currency`, the uniqueness applies per bag
+  - Implemented via EF Core unique index on the relationship between Transaction and Bag
+  - Multiple bags in the same request can have different currencies and will each be checked individually
 
 **Repository:**
 - Uses generic `IRepository<Transaction, Guid>` (inherited from base)
@@ -170,10 +172,12 @@ Both handlers:
 
 The unique constraint applies to each **bag within a transaction**:
 - **(BagId, OperationId, Currency, VendorId)** must be unique across all transactions in the database
+- OperationId is shared across all bags in a request (root level)
+- Each bag specifies its own Currency
 
 **Implementation approach:**
-- EF Core unique index on the Transaction/Bag relationship
-- If multiple bags in a single request share the same (BagId, OperationId, Currency) → validation should catch this; alternatively, the index catches it at DB level
+- EF Core unique index on the Bag's (BagId, OperationId, Currency, VendorId) composite
+- If multiple bags in a single request have the same Currency → validation may catch duplicates; DB constraint is the final gate
 - On constraint violation → `DbUpdateException` is caught in the handler → `Result.Conflict()` returned
 
 **Conflict handling:** Return `409 Conflict` without additional detail (per requirements).
@@ -261,7 +265,8 @@ DbUpdateException (constraint violation)?
 ## Open Questions / Assumptions
 
 - **Header name:** Assuming `X-Vendor-Id`; can be changed if a different convention is preferred
-- **Unique constraint implementation:** Using EF Core index; specific syntax depends on final entity design
-- **Bag collection uniqueness within a request:** Assuming validation catches duplicates within the same request; DB constraint is final gate
+- **Unique constraint implementation:** Using EF Core index on (BagId, OperationId, Currency, VendorId)
+- **Bag collection uniqueness within a request:** Multiple bags with the same Currency in a single request will fail the DB constraint
 - **Transaction status tracking:** Not included in initial scope; all transactions are recorded as-is
+- **Timestamp generation:** CreatedAt and ModifiedAt are set by the application layer (handler) or database defaults
 
