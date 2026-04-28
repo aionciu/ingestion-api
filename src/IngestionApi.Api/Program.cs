@@ -17,6 +17,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 var app = builder.Build();
 
 app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseMiddleware<RequestResponseLoggingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
