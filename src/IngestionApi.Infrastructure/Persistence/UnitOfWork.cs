@@ -16,11 +16,25 @@ public sealed class UnitOfWork : IUnitOfWork
         {
             return await _context.SaveChangesAsync(ct);
         }
-        catch (DbUpdateException ex) when (
-            ex.InnerException?.Message.Contains("UNIQUE constraint failed") == true ||
-            ex.InnerException?.Message.Contains("duplicate key") == true)
+        catch (DbUpdateException ex)
         {
-            throw new ConflictException("A conflict occurred with existing data.", ex);
+            // Check if this is a constraint violation by inspecting the entries
+            var conflictEntries = ex.Entries
+                .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified)
+                .ToList();
+
+            // If we have entries and a database exception, it's likely a constraint/validation error
+            // Re-throw as ConflictException if the error message suggests a unique constraint
+            if (conflictEntries.Any() &&
+                (ex.InnerException?.Message.Contains("UNIQUE") == true ||
+                 ex.InnerException?.Message.Contains("duplicate") == true ||
+                 ex.InnerException?.Message.Contains("constraint") == true))
+            {
+                throw new ConflictException("A transaction with these details already exists.", ex);
+            }
+
+            // For other database errors, re-throw the original exception
+            throw;
         }
     }
 }
