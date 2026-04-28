@@ -56,9 +56,22 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
                 .IsRequired()
                 .HasMaxLength(3);
 
-            // Unique constraint per bag: (BagId, OperationId, Currency, VendorId)
-            b.HasIndex("TransactionId")
-                .HasDatabaseName("IX_TransactionBags_Unique")
+            // Add shadow properties for the parent Transaction's unique constraint columns
+            b.Property<string>("BagId")
+                .IsRequired()
+                .HasMaxLength(255);
+
+            b.Property<string>("OperationId")
+                .IsRequired()
+                .HasMaxLength(255);
+
+            b.Property<string>("VendorId")
+                .IsRequired()
+                .HasMaxLength(255);
+
+            // Create the composite unique constraint: (BagId, OperationId, Currency, VendorId)
+            b.HasIndex("BagId", "OperationId", "Currency", "VendorId")
+                .HasDatabaseName("IX_TransactionBags_BagOpCurrVendor")
                 .IsUnique();
         });
     }
