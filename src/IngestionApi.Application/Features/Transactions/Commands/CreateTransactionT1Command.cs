@@ -1,6 +1,7 @@
 using IngestionApi.Application.Common;
 using IngestionApi.Application.Features.Transactions.DTOs;
 using IngestionApi.Domain.Common;
+using IngestionApi.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace IngestionApi.Application.Features.Transactions.Commands;
@@ -15,13 +16,16 @@ public class CreateTransactionT1CommandHandler : ICommandHandler<CreateTransacti
 {
     private readonly ILogger<CreateTransactionT1CommandHandler> _logger;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IRepository<Transaction, Guid> _repository;
 
     public CreateTransactionT1CommandHandler(
         ILogger<CreateTransactionT1CommandHandler> logger,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IRepository<Transaction, Guid> repository)
     {
         _logger = logger;
         _unitOfWork = unitOfWork;
+        _repository = repository;
     }
 
     public async Task<Result> HandleAsync(CreateTransactionT1Command command, CancellationToken cancellationToken)
@@ -31,9 +35,51 @@ public class CreateTransactionT1CommandHandler : ICommandHandler<CreateTransacti
 
         try
         {
+            // For T+1 endpoint: create 3 transactions per bag (one for each value type)
+            int transactionCount = 0;
+            foreach (var bag in command.Bags)
+            {
+                // Transaction Type 1: DeclaredValue
+                _repository.Add(new Transaction
+                {
+                    OperationId = command.OperationId,
+                    VendorId = command.VendorId,
+                    BagId = command.BagId,
+                    Currency = bag.Currency,
+                    Value = bag.DeclaredValue,
+                    TransactionType = 1
+                });
+                transactionCount++;
+
+                // Transaction Type 2: ProcessedValue
+                _repository.Add(new Transaction
+                {
+                    OperationId = command.OperationId,
+                    VendorId = command.VendorId,
+                    BagId = command.BagId,
+                    Currency = bag.Currency,
+                    Value = bag.ProcessedValue,
+                    TransactionType = 2
+                });
+                transactionCount++;
+
+                // Transaction Type 3: DifferenceValue
+                _repository.Add(new Transaction
+                {
+                    OperationId = command.OperationId,
+                    VendorId = command.VendorId,
+                    BagId = command.BagId,
+                    Currency = bag.Currency,
+                    Value = bag.DifferenceValue,
+                    TransactionType = 3
+                });
+                transactionCount++;
+            }
+
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("T+1 transaction {OperationId} processed successfully", command.OperationId);
+            _logger.LogInformation("T+1 transaction {OperationId} processed successfully with {TransactionCount} rows",
+                command.OperationId, transactionCount);
             return Result.Success();
         }
         catch (ConflictException)

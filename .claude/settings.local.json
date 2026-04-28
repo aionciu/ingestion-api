@@ -29,7 +29,10 @@
       "Bash(dotnet run *)",
       "Bash(git restore *)",
       "Bash(bash /tmp/validation.sh)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(xargs grep *)",
+      "PowerShell(New-Item *)",
+      "Bash(dotnet ef migrations *)"
     ]
   }
 }

@@ -1,6 +1,7 @@
 using IngestionApi.Application.Common;
 using IngestionApi.Application.Features.Transactions.DTOs;
 using IngestionApi.Domain.Common;
+using IngestionApi.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace IngestionApi.Application.Features.Transactions.Commands;
@@ -15,13 +16,16 @@ public class CreateTransactionTCommandHandler : ICommandHandler<CreateTransactio
 {
     private readonly ILogger<CreateTransactionTCommandHandler> _logger;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IRepository<Transaction, Guid> _repository;
 
     public CreateTransactionTCommandHandler(
         ILogger<CreateTransactionTCommandHandler> logger,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IRepository<Transaction, Guid> repository)
     {
         _logger = logger;
         _unitOfWork = unitOfWork;
+        _repository = repository;
     }
 
     public async Task<Result> HandleAsync(CreateTransactionTCommand command, CancellationToken cancellationToken)
@@ -31,6 +35,22 @@ public class CreateTransactionTCommandHandler : ICommandHandler<CreateTransactio
 
         try
         {
+            // For T endpoint: only create DeclaredValue transactions
+            // Validator ensures ProcessedValue=0 and DifferenceValue=0
+            foreach (var bag in command.Bags)
+            {
+                var transaction = new Transaction
+                {
+                    OperationId = command.OperationId,
+                    VendorId = command.VendorId,
+                    BagId = command.BagId,
+                    Currency = bag.Currency,
+                    Value = bag.DeclaredValue,
+                    TransactionType = 1 // DeclaredValue
+                };
+                _repository.Add(transaction);
+            }
+
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("T transaction {OperationId} processed successfully", command.OperationId);
