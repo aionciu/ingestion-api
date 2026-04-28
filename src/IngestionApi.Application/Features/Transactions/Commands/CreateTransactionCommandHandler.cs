@@ -1,34 +1,38 @@
 using IngestionApi.Application.Common;
+using IngestionApi.Application.Features.Transactions.DTOs;
 using IngestionApi.Domain.Common;
 using Microsoft.Extensions.Logging;
 
 namespace IngestionApi.Application.Features.Transactions.Commands;
 
-public record CreateTransactionCommand(string VendorId, string TransactionId, string Payload);
+public record CreateTransactionTCommand(
+    string OperationId,
+    string BagId,
+    List<BagDto> Bags,
+    string VendorId);
 
-public class CreateTransactionCommandHandler : ICommandHandler<CreateTransactionCommand>
+public class CreateTransactionTCommandHandler : ICommandHandler<CreateTransactionTCommand>
 {
-    private readonly ILogger<CreateTransactionCommandHandler> _logger;
+    private readonly ILogger<CreateTransactionTCommandHandler> _logger;
     private readonly IUnitOfWork _unitOfWork;
 
-    public CreateTransactionCommandHandler(
-        ILogger<CreateTransactionCommandHandler> logger,
+    public CreateTransactionTCommandHandler(
+        ILogger<CreateTransactionTCommandHandler> logger,
         IUnitOfWork unitOfWork)
     {
         _logger = logger;
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Result> HandleAsync(CreateTransactionCommand command, CancellationToken cancellationToken)
+    public async Task<Result> HandleAsync(CreateTransactionTCommand command, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Transaction received from vendor {VendorId} with ID {TransactionId}",
-            command.VendorId, command.TransactionId);
+        _logger.LogInformation("T transaction received from vendor {VendorId} with operation {OperationId}",
+            command.VendorId, command.OperationId);
 
-        // Placeholder: validation and processing would go here
-
-        _logger.LogInformation("Transaction {TransactionId} processed successfully", command.TransactionId);
-
+        // Transaction creation and persistence placeholder
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("T transaction {OperationId} processed successfully", command.OperationId);
         return Result.Success();
     }
 }
