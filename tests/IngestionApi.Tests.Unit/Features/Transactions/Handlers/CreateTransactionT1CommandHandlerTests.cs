@@ -1,4 +1,3 @@
-using FluentValidation;
 using IngestionApi.Application.Common;
 using IngestionApi.Application.Features.Transactions.Commands;
 using IngestionApi.Application.Features.Transactions.DTOs;
@@ -15,12 +14,11 @@ public class CreateTransactionT1CommandHandlerTests
     private readonly Mock<IUnitOfWork> _mockUnitOfWork = new();
     private readonly Mock<IRepository<Transaction, Guid>> _mockRepository = new();
     private readonly Mock<ILogger<CreateTransactionT1CommandHandler>> _mockLogger = new();
-    private readonly Mock<IValidator<CreateTransactionT1Command>> _mockValidator = new();
     private readonly CreateTransactionT1CommandHandler _handler;
 
     public CreateTransactionT1CommandHandlerTests()
     {
-        _handler = new CreateTransactionT1CommandHandler(_mockLogger.Object, _mockUnitOfWork.Object, _mockRepository.Object, _mockValidator.Object);
+        _handler = new CreateTransactionT1CommandHandler(_mockLogger.Object, _mockUnitOfWork.Object, _mockRepository.Object);
     }
 
     [Fact]
