@@ -37,19 +37,16 @@ public class CreateTransactionTCommandHandler : ICommandHandler<CreateTransactio
         {
             // For T endpoint: only create DeclaredValue transactions
             // Validator ensures ProcessedValue=0 and DifferenceValue=0
-            foreach (var bag in command.Bags)
+            var transactions = command.Bags.Select(bag => new Transaction
             {
-                var transaction = new Transaction
-                {
-                    OperationId = command.OperationId,
-                    VendorId = command.VendorId,
-                    BagId = command.BagId,
-                    Currency = bag.Currency,
-                    Value = bag.DeclaredValue,
-                    TransactionType = 1 // DeclaredValue
-                };
-                _repository.Add(transaction);
-            }
+                OperationId = command.OperationId,
+                VendorId = command.VendorId,
+                BagId = command.BagId,
+                Currency = bag.Currency,
+                Value = bag.DeclaredValue,
+                TransactionType = 1 // DeclaredValue
+            }).ToList();
+            _repository.AddRange(transactions);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 

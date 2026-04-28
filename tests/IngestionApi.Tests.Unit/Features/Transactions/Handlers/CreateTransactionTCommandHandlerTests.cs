@@ -35,7 +35,7 @@ public class CreateTransactionTCommandHandlerTests
         var result = await _handler.HandleAsync(command, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        _mockRepository.Verify(x => x.Add(It.IsAny<Transaction>()), Times.Once);
+        _mockRepository.Verify(x => x.AddRange(It.Is<IEnumerable<Transaction>>(list => list.Count() == 1)), Times.Once);
         _mockUnitOfWork.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -73,6 +73,6 @@ public class CreateTransactionTCommandHandlerTests
         var result = await _handler.HandleAsync(command, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        _mockRepository.Verify(x => x.Add(It.IsAny<Transaction>()), Times.Exactly(2));
+        _mockRepository.Verify(x => x.AddRange(It.Is<IEnumerable<Transaction>>(list => list.Count() == 2)), Times.Once);
     }
 }

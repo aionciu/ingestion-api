@@ -36,11 +36,9 @@ public class CreateTransactionT1CommandHandler : ICommandHandler<CreateTransacti
         try
         {
             // For T+1 endpoint: create 3 transactions per bag (one for each value type)
-            int transactionCount = 0;
-            foreach (var bag in command.Bags)
+            var transactions = command.Bags.SelectMany(bag => new[]
             {
-                // Transaction Type 1: DeclaredValue
-                _repository.Add(new Transaction
+                new Transaction
                 {
                     OperationId = command.OperationId,
                     VendorId = command.VendorId,
@@ -48,11 +46,8 @@ public class CreateTransactionT1CommandHandler : ICommandHandler<CreateTransacti
                     Currency = bag.Currency,
                     Value = bag.DeclaredValue,
                     TransactionType = 1
-                });
-                transactionCount++;
-
-                // Transaction Type 2: ProcessedValue
-                _repository.Add(new Transaction
+                },
+                new Transaction
                 {
                     OperationId = command.OperationId,
                     VendorId = command.VendorId,
@@ -60,11 +55,8 @@ public class CreateTransactionT1CommandHandler : ICommandHandler<CreateTransacti
                     Currency = bag.Currency,
                     Value = bag.ProcessedValue,
                     TransactionType = 2
-                });
-                transactionCount++;
-
-                // Transaction Type 3: DifferenceValue
-                _repository.Add(new Transaction
+                },
+                new Transaction
                 {
                     OperationId = command.OperationId,
                     VendorId = command.VendorId,
@@ -72,14 +64,14 @@ public class CreateTransactionT1CommandHandler : ICommandHandler<CreateTransacti
                     Currency = bag.Currency,
                     Value = bag.DifferenceValue,
                     TransactionType = 3
-                });
-                transactionCount++;
-            }
+                }
+            }).ToList();
+            _repository.AddRange(transactions);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("T+1 transaction {OperationId} processed successfully with {TransactionCount} rows",
-                command.OperationId, transactionCount);
+                command.OperationId, transactions.Count);
             return Result.Success();
         }
         catch (ConflictException)

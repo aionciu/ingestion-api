@@ -36,7 +36,7 @@ public class CreateTransactionT1CommandHandlerTests
 
         Assert.True(result.IsSuccess);
         // Should create 3 transactions for 1 bag
-        _mockRepository.Verify(x => x.Add(It.IsAny<Transaction>()), Times.Exactly(3));
+        _mockRepository.Verify(x => x.AddRange(It.Is<IEnumerable<Transaction>>(list => list.Count() == 3)), Times.Once);
     }
 
     [Fact]
@@ -75,6 +75,6 @@ public class CreateTransactionT1CommandHandlerTests
 
         Assert.True(result.IsSuccess);
         // Should create 3 transactions for each of 3 bags = 9 total
-        _mockRepository.Verify(x => x.Add(It.IsAny<Transaction>()), Times.Exactly(9));
+        _mockRepository.Verify(x => x.AddRange(It.Is<IEnumerable<Transaction>>(list => list.Count() == 9)), Times.Once);
     }
 }
