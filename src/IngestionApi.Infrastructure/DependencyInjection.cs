@@ -16,8 +16,12 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+        services.AddDbContextPool<AppDbContext>(options =>
+            options.UseSqlServer(
+                configuration.GetConnectionString("DefaultConnection"),
+                sql => sql
+                    .EnableRetryOnFailure(3)
+                    .CommandTimeout(30)));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
