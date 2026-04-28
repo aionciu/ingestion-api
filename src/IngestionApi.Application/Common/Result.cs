@@ -15,6 +15,7 @@ public class Result
 
     public static Result Success() => new(true, false, null);
     public static Result Failure(string error) => new(false, false, error);
+    public static Result ValidationFailure(string error = "Validation failed") => new(false, false, error);
     public static Result Conflict() => new(false, true, "A conflict occurred with existing data.");
     public static Result<T> Success<T>(T value) => new(value, true, false, null);
     public static Result<T> Failure<T>(string error) => new(default, false, false, error);

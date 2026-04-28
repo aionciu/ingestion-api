@@ -1,3 +1,4 @@
+using FluentValidation;
 using IngestionApi.Application.Common;
 using IngestionApi.Application.Features.Transactions.Commands;
 using IngestionApi.Application.Features.Transactions.DTOs;
@@ -12,15 +13,21 @@ public class VendorTransactionsController : ControllerBase
 {
     private readonly ICommandHandler<CreateTransactionTCommand> _createTransactionTHandler;
     private readonly ICommandHandler<CreateTransactionT1Command> _createTransactionT1Handler;
+    private readonly IValidator<CreateTransactionTCommand> _createTransactionTValidator;
+    private readonly IValidator<CreateTransactionT1Command> _createTransactionT1Validator;
     private readonly ILogger<VendorTransactionsController> _logger;
 
     public VendorTransactionsController(
         ICommandHandler<CreateTransactionTCommand> createTransactionTHandler,
         ICommandHandler<CreateTransactionT1Command> createTransactionT1Handler,
+        IValidator<CreateTransactionTCommand> createTransactionTValidator,
+        IValidator<CreateTransactionT1Command> createTransactionT1Validator,
         ILogger<VendorTransactionsController> logger)
     {
         _createTransactionTHandler = createTransactionTHandler;
         _createTransactionT1Handler = createTransactionT1Handler;
+        _createTransactionTValidator = createTransactionTValidator;
+        _createTransactionT1Validator = createTransactionT1Validator;
         _logger = logger;
     }
 
@@ -44,12 +51,20 @@ public class VendorTransactionsController : ControllerBase
             request.Bags.ConvertAll(b => new BagDto(b.DeclaredValue, b.ProcessedValue, b.DifferenceValue, b.Currency)),
             vendorId);
 
+        var validationResult = await _createTransactionTValidator.ValidateAsync(command, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            _logger.LogWarning("T transaction validation failed for {OperationId}", command.OperationId);
+            return BadRequest(new { errors = validationResult.Errors.Select(e => new { property = e.PropertyName, message = e.ErrorMessage }) });
+        }
+
         var result = await _createTransactionTHandler.HandleAsync(command, cancellationToken);
 
         return result switch
         {
             { IsSuccess: true } => Accepted(),
             { IsConflict: true } => Conflict(new { detail = "A transaction with these bag details already exists." }),
+            { Error: not null } => BadRequest(new { detail = result.Error }),
             _ => StatusCode(StatusCodes.Status500InternalServerError)
         };
     }
@@ -74,12 +89,20 @@ public class VendorTransactionsController : ControllerBase
             request.Bags.ConvertAll(b => new BagDto(b.DeclaredValue, b.ProcessedValue, b.DifferenceValue, b.Currency)),
             vendorId);
 
+        var validationResult = await _createTransactionT1Validator.ValidateAsync(command, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            _logger.LogWarning("T+1 transaction validation failed for {OperationId}", command.OperationId);
+            return BadRequest(new { errors = validationResult.Errors.Select(e => new { property = e.PropertyName, message = e.ErrorMessage }) });
+        }
+
         var result = await _createTransactionT1Handler.HandleAsync(command, cancellationToken);
 
         return result switch
         {
             { IsSuccess: true } => Accepted(),
             { IsConflict: true } => Conflict(new { detail = "A transaction with these bag details already exists." }),
+            { Error: not null } => BadRequest(new { detail = result.Error }),
             _ => StatusCode(StatusCodes.Status500InternalServerError)
         };
     }

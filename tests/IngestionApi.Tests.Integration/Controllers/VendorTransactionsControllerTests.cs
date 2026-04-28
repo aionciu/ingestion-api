@@ -1,5 +1,4 @@
 using IngestionApi.Api.Controllers;
-using Microsoft.AspNetCore.Mvc.Testing;
 using System.Text.Json;
 using Xunit;
 
@@ -7,12 +6,12 @@ namespace IngestionApi.Tests.Integration.Controllers;
 
 public class VendorTransactionsControllerTests : IAsyncLifetime
 {
-    private readonly WebApplicationFactory<Program> _factory;
-    private HttpClient _client;
+    private readonly TestWebApplicationFactory _factory;
+    private HttpClient _client = null!;
 
     public VendorTransactionsControllerTests()
     {
-        _factory = new WebApplicationFactory<Program>();
+        _factory = new TestWebApplicationFactory();
     }
 
     public async Task InitializeAsync()
