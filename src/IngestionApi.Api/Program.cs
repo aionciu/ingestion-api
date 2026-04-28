@@ -1,3 +1,4 @@
+using IngestionApi.Api.Middleware;
 using IngestionApi.Application;
 using IngestionApi.Infrastructure;
 using Serilog;
@@ -14,6 +15,8 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
+
+app.UseMiddleware<CorrelationIdMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
