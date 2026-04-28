@@ -11,7 +11,25 @@
       "Bash(dotnet restore *)",
       "Bash(timeout 10 dotnet run --project src/IngestionApi.Api)",
       "Bash(timeout 15 dotnet run --project src/IngestionApi.Api)",
-      "Bash(timeout 15 dotnet run --no-launch-profile)"
+      "Bash(timeout 15 dotnet run --no-launch-profile)",
+      "Bash(grep -E \"\\\\.\\(cs|json\\)$\")",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(powershell -Command ' *)",
+      "Bash(ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/IngestionApi.Api)",
+      "Bash(curl -i http://localhost:5000/health)",
+      "Bash(pkill -f \"dotnet run\")",
+      "Bash(taskkill /F /IM dotnet.exe)",
+      "PowerShell(Get-Process *)",
+      "Bash(grep -n \"\\\\\\\\[.*-.*-.*-.*-.*\\\\\\\\]\" /c/Users/ionci/source/.net/ingestion-api/tests/IngestionApi.Tests.Integration/bin/Debug/net10.0/logs/ingestion-20260428.log)",
+      "Bash(tee /tmp/test_output.txt)",
+      "Bash(timeout 5 dotnet run --project src/IngestionApi.Api)",
+      "Bash(dotnet clean *)",
+      "Bash(cat)",
+      "Bash(dotnet run *)",
+      "Bash(git restore *)",
+      "Bash(bash /tmp/validation.sh)",
+      "Bash(git checkout *)"
     ]
   }
 }

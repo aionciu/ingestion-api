@@ -29,10 +29,17 @@ public class CreateTransactionT1CommandHandler : ICommandHandler<CreateTransacti
         _logger.LogInformation("T+1 transaction received from vendor {VendorId} with operation {OperationId}",
             command.VendorId, command.OperationId);
 
-        // Transaction creation and persistence placeholder
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("T+1 transaction {OperationId} processed successfully", command.OperationId);
-        return Result.Success();
+            _logger.LogInformation("T+1 transaction {OperationId} processed successfully", command.OperationId);
+            return Result.Success();
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("duplicate constraint violation"))
+        {
+            _logger.LogWarning("T+1 transaction {OperationId} conflicts with existing data", command.OperationId);
+            return Result.Failure("A transaction with the same unique constraint already exists.");
+        }
     }
 }
