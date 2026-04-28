@@ -36,10 +36,10 @@ public class CreateTransactionTCommandHandler : ICommandHandler<CreateTransactio
             _logger.LogInformation("T transaction {OperationId} processed successfully", command.OperationId);
             return Result.Success();
         }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("duplicate constraint violation"))
+        catch (ConflictException)
         {
             _logger.LogWarning("T transaction {OperationId} conflicts with existing data", command.OperationId);
-            return Result.Failure("A transaction with the same unique constraint already exists.");
+            return Result.Conflict();
         }
     }
 }

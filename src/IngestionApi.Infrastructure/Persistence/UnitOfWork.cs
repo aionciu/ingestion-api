@@ -1,3 +1,4 @@
+using IngestionApi.Application.Common;
 using IngestionApi.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,8 +20,7 @@ public sealed class UnitOfWork : IUnitOfWork
             ex.InnerException?.Message.Contains("UNIQUE constraint failed") == true ||
             ex.InnerException?.Message.Contains("duplicate key") == true)
         {
-            // Re-throw as a more specific exception that the Application layer can handle
-            throw new InvalidOperationException("A duplicate constraint violation occurred.", ex);
+            throw new ConflictException("A conflict occurred with existing data.", ex);
         }
     }
 }
