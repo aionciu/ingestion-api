@@ -1,6 +1,9 @@
+using IngestionApi.Api.Filters;
 using IngestionApi.Infrastructure;
 using IngestionApi.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,6 +42,12 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
                 options.UseInMemoryDatabase("TestDatabase");
             });
 
+            // Replace VendorSignatureFilter with a no-op so controller tests are not affected by signature verification
+            var vendorFilterDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(VendorSignatureFilter));
+            if (vendorFilterDescriptor is not null)
+                services.Remove(vendorFilterDescriptor);
+            services.AddScoped<VendorSignatureFilter, NoOpVendorSignatureFilter>();
+
             // Create database schema
             var serviceProvider = services.BuildServiceProvider();
             using (var scope = serviceProvider.CreateScope())
@@ -47,5 +56,15 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
                 context.Database.EnsureCreated();
             }
         });
+    }
+
+    private sealed class NoOpVendorSignatureFilter(
+        Microsoft.Extensions.Options.IOptions<Api.Options.VendorCertificateOptions> options,
+        ICertificateLoader loader,
+        Microsoft.Extensions.Logging.ILogger<VendorSignatureFilter> logger)
+        : VendorSignatureFilter(options, loader, logger)
+    {
+        public override Task OnResourceExecutionAsync(ResourceExecutingContext context, ResourceExecutionDelegate next)
+            => next();
     }
 }

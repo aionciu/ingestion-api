@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -28,7 +29,7 @@ public class VendorSignatureFilterTests
         return new VendorSignatureFilter(options, loader, NullLogger<VendorSignatureFilter>.Instance);
     }
 
-    private static ActionExecutingContext CreateContext(
+    private static ResourceExecutingContext CreateContext(
         string? vendorId = VendorId,
         string? signature = null,
         string body = "{}")
@@ -44,11 +45,10 @@ public class VendorSignatureFilterTests
         httpContext.Request.ContentType = "application/json";
 
         var actionContext = new ActionContext(httpContext, new RouteData(), new ActionDescriptor());
-        return new ActionExecutingContext(
+        return new ResourceExecutingContext(
             actionContext,
             new List<IFilterMetadata>(),
-            new Dictionary<string, object?>(),
-            controller: null!);
+            new List<IValueProviderFactory>());
     }
 
     private static X509Certificate2 CreateTestCertificate(out RSA privateKey)
@@ -74,7 +74,7 @@ public class VendorSignatureFilterTests
         var context = CreateContext(signature: null);
         bool nextCalled = false;
 
-        await filter.OnActionExecutionAsync(context, () => { nextCalled = true; return Task.FromResult<ActionExecutedContext>(null!); });
+        await filter.OnResourceExecutionAsync(context, () => { nextCalled = true; return Task.FromResult<ResourceExecutedContext>(null!); });
 
         Assert.IsType<UnauthorizedObjectResult>(context.Result);
         Assert.False(nextCalled);
@@ -87,7 +87,7 @@ public class VendorSignatureFilterTests
         var context = CreateContext(signature: "abc");
         bool nextCalled = false;
 
-        await filter.OnActionExecutionAsync(context, () => { nextCalled = true; return Task.FromResult<ActionExecutedContext>(null!); });
+        await filter.OnResourceExecutionAsync(context, () => { nextCalled = true; return Task.FromResult<ResourceExecutedContext>(null!); });
 
         Assert.IsType<UnauthorizedObjectResult>(context.Result);
         Assert.False(nextCalled);
@@ -103,7 +103,7 @@ public class VendorSignatureFilterTests
         var context = CreateContext(signature: "whatever");
         bool nextCalled = false;
 
-        await filter.OnActionExecutionAsync(context, () => { nextCalled = true; return Task.FromResult<ActionExecutedContext>(null!); });
+        await filter.OnResourceExecutionAsync(context, () => { nextCalled = true; return Task.FromResult<ResourceExecutedContext>(null!); });
 
         Assert.Null(context.Result);
         Assert.True(nextCalled);
@@ -125,7 +125,7 @@ public class VendorSignatureFilterTests
         var context = CreateContext(signature: Sign(body, privateKey), body: body);
         bool nextCalled = false;
 
-        await filter.OnActionExecutionAsync(context, () => { nextCalled = true; return Task.FromResult<ActionExecutedContext>(null!); });
+        await filter.OnResourceExecutionAsync(context, () => { nextCalled = true; return Task.FromResult<ResourceExecutedContext>(null!); });
 
         Assert.Null(context.Result);
         Assert.True(nextCalled);
@@ -146,7 +146,7 @@ public class VendorSignatureFilterTests
         var context = CreateContext(signature: Convert.ToBase64String(new byte[256]), body: "{\"test\":1}");
         bool nextCalled = false;
 
-        await filter.OnActionExecutionAsync(context, () => { nextCalled = true; return Task.FromResult<ActionExecutedContext>(null!); });
+        await filter.OnResourceExecutionAsync(context, () => { nextCalled = true; return Task.FromResult<ResourceExecutedContext>(null!); });
 
         Assert.IsType<UnauthorizedObjectResult>(context.Result);
         Assert.False(nextCalled);
@@ -166,7 +166,7 @@ public class VendorSignatureFilterTests
         var context = CreateContext(signature: Convert.ToBase64String(new byte[32]));
         bool nextCalled = false;
 
-        await filter.OnActionExecutionAsync(context, () => { nextCalled = true; return Task.FromResult<ActionExecutedContext>(null!); });
+        await filter.OnResourceExecutionAsync(context, () => { nextCalled = true; return Task.FromResult<ResourceExecutedContext>(null!); });
 
         Assert.IsType<UnauthorizedObjectResult>(context.Result);
         Assert.False(nextCalled);

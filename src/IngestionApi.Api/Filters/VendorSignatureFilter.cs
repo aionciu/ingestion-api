@@ -7,7 +7,7 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace IngestionApi.Api.Filters;
 
-public class VendorSignatureFilter : IAsyncActionFilter
+public class VendorSignatureFilter : IAsyncResourceFilter
 {
     private readonly VendorCertificateOptions _options;
     private readonly ICertificateLoader _certificateLoader;
@@ -23,7 +23,7 @@ public class VendorSignatureFilter : IAsyncActionFilter
         _logger = logger;
     }
 
-    public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+    public virtual async Task OnResourceExecutionAsync(ResourceExecutingContext context, ResourceExecutionDelegate next)
     {
         var request = context.HttpContext.Request;
         var vendorId = request.Headers["X-Vendor-Id"].ToString();
