@@ -1,8 +1,16 @@
+using System.Text.Json;
+
 namespace IngestionApi.Api.Middleware;
 
 public class AuthFailureAuditMiddleware
 {
+    private const int MaxBodyBytes = 8192;
     private const string SignatureHeader = "X-Vendor-Signature";
+    private const string JsonContentTypePrefix = "application/json";
+    private static readonly JsonSerializerOptions JsonLogOptions = new()
+    {
+        WriteIndented = true,
+    };
     private static readonly HashSet<string> SensitiveHeaders = new(StringComparer.OrdinalIgnoreCase)
     {
         "Authorization",
@@ -36,10 +44,12 @@ public class AuthFailureAuditMiddleware
         var queryString = request.QueryString.Value ?? string.Empty;
         var remoteIp = context.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
         var headers = RedactHeaders(request.Headers);
+        var headersJson = JsonSerializer.Serialize(headers, JsonLogOptions);
+        var (body, bodyTruncated, bodyTotalBytes) = await ReadBodyAsync(request);
 
         _logger.LogWarning(
-            "401 audit: {Method} {Path}{QueryString} from {RemoteIp} headers={@Headers}",
-            method, path, queryString, remoteIp, headers);
+            "401 audit: {Method} {Path}{QueryString} from {RemoteIp}\nheaders={HeadersJson}\nbody={Body}\ntruncated={BodyTruncated} totalBytes={BodyTotalBytes}",
+            method, path, queryString, remoteIp, headersJson, body, bodyTruncated, bodyTotalBytes);
     }
 
     private static IDictionary<string, string> RedactHeaders(IHeaderDictionary source)
@@ -64,5 +74,49 @@ public class AuthFailureAuditMiddleware
             result[name] = raw;
         }
         return result;
+    }
+
+    private static async Task<(string Body, bool Truncated, long TotalBytes)> ReadBodyAsync(HttpRequest request)
+    {
+        var contentLength = request.ContentLength ?? 0;
+        if (contentLength == 0)
+        {
+            return (string.Empty, false, 0);
+        }
+
+        var contentType = request.ContentType ?? string.Empty;
+        if (!contentType.StartsWith(JsonContentTypePrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return ("[non-json content omitted]", false, contentLength);
+        }
+
+        if (request.Body.CanSeek)
+        {
+            request.Body.Position = 0;
+        }
+
+        var buffer = new byte[MaxBodyBytes];
+        var read = 0;
+        while (read < buffer.Length)
+        {
+            var count = await request.Body.ReadAsync(buffer.AsMemory(read, buffer.Length - read));
+            if (count == 0)
+            {
+                break;
+            }
+
+            read += count;
+        }
+
+        var truncated = contentLength > MaxBodyBytes;
+        var totalBytes = truncated ? contentLength : read;
+        var body = System.Text.Encoding.UTF8.GetString(buffer, 0, read);
+
+        if (request.Body.CanSeek)
+        {
+            request.Body.Position = 0;
+        }
+
+        return (body, truncated, totalBytes);
     }
 }
