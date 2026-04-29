@@ -37,7 +37,8 @@
       "Bash(tee test_output.log)",
       "Bash(git branch *)",
       "Bash(git -C \"C:\\\\Users\\\\ionci\\\\source\\\\.net\\\\ingestion-api\" add src/IngestionApi.Api/Middleware/ExceptionHandlingMiddleware.cs)",
-      "Bash(git -C 'C:\\\\Users\\\\ionci\\\\source\\\\.net\\\\ingestion-api' commit -m ' *)"
+      "Bash(git -C 'C:\\\\Users\\\\ionci\\\\source\\\\.net\\\\ingestion-api' commit -m ' *)",
+      "Bash(git stash *)"
     ]
   }
 }
