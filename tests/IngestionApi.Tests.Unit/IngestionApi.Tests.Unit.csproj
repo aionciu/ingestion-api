@@ -22,6 +22,7 @@
 
   <ItemGroup>
 <ProjectReference Include="..\..\src\IngestionApi.Application\IngestionApi.Application.csproj" />
+    <ProjectReference Include="..\..\src\IngestionApi.Api\IngestionApi.Api.csproj" />
     <ProjectReference Include="..\..\src\IngestionApi.Domain\IngestionApi.Domain.csproj" />
   </ItemGroup>
 
