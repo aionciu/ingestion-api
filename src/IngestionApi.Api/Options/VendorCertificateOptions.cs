@@ -8,5 +8,5 @@ public class VendorCertificateOptions
 public class VendorCertificateEntry
 {
     public string Thumbprint { get; set; } = string.Empty;
-    public bool SignatureVerificationEnabled { get; set; }
+    public bool SignatureVerificationEnabled { get; set; } = true;
 }

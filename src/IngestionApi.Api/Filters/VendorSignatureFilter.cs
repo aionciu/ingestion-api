@@ -23,23 +23,23 @@ public class VendorSignatureFilter : IAsyncResourceFilter
         _logger = logger;
     }
 
-    public virtual async Task OnResourceExecutionAsync(ResourceExecutingContext context, ResourceExecutionDelegate next)
+    public async Task OnResourceExecutionAsync(ResourceExecutingContext context, ResourceExecutionDelegate next)
     {
         var request = context.HttpContext.Request;
         var vendorId = request.Headers["X-Vendor-Id"].ToString();
         var signature = request.Headers["X-Vendor-Signature"].ToString();
 
-        if (string.IsNullOrWhiteSpace(signature))
-        {
-            _logger.LogWarning("Missing X-Vendor-Signature header for vendor {VendorId}", vendorId);
-            context.Result = new UnauthorizedObjectResult(new { detail = "X-Vendor-Signature header is required" });
-            return;
-        }
-
         if (!_options.Vendors.TryGetValue(vendorId, out var entry))
         {
             _logger.LogWarning("Unknown vendor {VendorId}", vendorId);
             context.Result = new UnauthorizedObjectResult(new { detail = "Unknown vendor" });
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(signature))
+        {
+            _logger.LogWarning("Missing X-Vendor-Signature header for vendor {VendorId}", vendorId);
+            context.Result = new UnauthorizedObjectResult(new { detail = "X-Vendor-Signature header is required" });
             return;
         }
 

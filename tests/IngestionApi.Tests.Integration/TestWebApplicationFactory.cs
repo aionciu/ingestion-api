@@ -46,7 +46,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             var vendorFilterDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(VendorSignatureFilter));
             if (vendorFilterDescriptor is not null)
                 services.Remove(vendorFilterDescriptor);
-            services.AddScoped<VendorSignatureFilter, NoOpVendorSignatureFilter>();
+            services.AddScoped(typeof(VendorSignatureFilter), _ => new NoOpVendorSignatureFilter());
 
             // Create database schema
             var serviceProvider = services.BuildServiceProvider();
@@ -58,13 +58,9 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
         });
     }
 
-    private sealed class NoOpVendorSignatureFilter(
-        Microsoft.Extensions.Options.IOptions<Api.Options.VendorCertificateOptions> options,
-        ICertificateLoader loader,
-        Microsoft.Extensions.Logging.ILogger<VendorSignatureFilter> logger)
-        : VendorSignatureFilter(options, loader, logger)
+    private sealed class NoOpVendorSignatureFilter : IAsyncResourceFilter
     {
-        public override Task OnResourceExecutionAsync(ResourceExecutingContext context, ResourceExecutionDelegate next)
+        public Task OnResourceExecutionAsync(ResourceExecutingContext context, ResourceExecutionDelegate next)
             => next();
     }
 }
