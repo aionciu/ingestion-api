@@ -38,7 +38,13 @@
       "Bash(git branch *)",
       "Bash(git -C \"C:\\\\Users\\\\ionci\\\\source\\\\.net\\\\ingestion-api\" add src/IngestionApi.Api/Middleware/ExceptionHandlingMiddleware.cs)",
       "Bash(git -C 'C:\\\\Users\\\\ionci\\\\source\\\\.net\\\\ingestion-api' commit -m ' *)",
-      "Bash(git stash *)"
+      "Bash(git stash *)",
+      "Bash(dotnet remove *)",
+      "Bash(git *)",
+      "Bash(dotnet package *)",
+      "Bash(dotnet list *)",
+      "Bash(dotnet script *)",
+      "Bash(dotnet *)"
     ]
   }
 }
