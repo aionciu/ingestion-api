@@ -15,12 +15,31 @@ public class DatabaseStartupCheck : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        using var scope = _scopeFactory.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        _logger.LogInformation("Checking database connectivity...");
 
-        var canConnect = await context.Database.CanConnectAsync(cancellationToken);
-        if (!canConnect)
-            throw new InvalidOperationException("Cannot connect to the database.");
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var canConnect = await context.Database.CanConnectAsync(cancellationToken);
+            if (!canConnect)
+            {
+                _logger.LogError("Database connectivity check failed: server unreachable.");
+                throw new InvalidOperationException("Cannot connect to the database.");
+            }
+
+            _logger.LogInformation("Database connectivity check passed.");
+        }
+        catch (InvalidOperationException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Database connectivity check failed.");
+            throw new InvalidOperationException("Cannot connect to the database.", ex);
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
