@@ -44,7 +44,9 @@
       "Bash(dotnet package *)",
       "Bash(dotnet list *)",
       "Bash(dotnet script *)",
-      "Bash(dotnet *)"
+      "Bash(dotnet *)",
+      "Bash(dotnet-script)",
+      "Bash(echo \"exit: $?\")"
     ]
   }
 }

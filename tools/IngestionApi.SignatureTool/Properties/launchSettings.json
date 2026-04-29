@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "IngestionApi.SignatureTool": {
+      "commandName": "Project",
+      "commandLineArgs": "--file test.json --config appsettings.json"
+    }
+  }
+}
