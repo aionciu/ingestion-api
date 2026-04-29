@@ -76,7 +76,7 @@ public class VendorSignatureFilterTests
 
         await filter.OnResourceExecutionAsync(context, () => { nextCalled = true; return Task.FromResult<ResourceExecutedContext>(null!); });
 
-        Assert.IsType<UnauthorizedObjectResult>(context.Result);
+        Assert.IsType<UnauthorizedResult>(context.Result);
         Assert.False(nextCalled);
     }
 
@@ -89,7 +89,7 @@ public class VendorSignatureFilterTests
 
         await filter.OnResourceExecutionAsync(context, () => { nextCalled = true; return Task.FromResult<ResourceExecutedContext>(null!); });
 
-        Assert.IsType<UnauthorizedObjectResult>(context.Result);
+        Assert.IsType<UnauthorizedResult>(context.Result);
         Assert.False(nextCalled);
     }
 

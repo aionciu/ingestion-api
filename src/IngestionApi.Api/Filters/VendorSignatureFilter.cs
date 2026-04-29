@@ -32,14 +32,14 @@ public class VendorSignatureFilter : IAsyncResourceFilter
         if (!_options.Vendors.TryGetValue(vendorId, out var entry))
         {
             _logger.LogWarning("Unknown vendor {VendorId}", vendorId);
-            context.Result = new UnauthorizedObjectResult(new { detail = "Unknown vendor" });
+            context.Result = new UnauthorizedResult();
             return;
         }
 
         if (string.IsNullOrWhiteSpace(signature))
         {
             _logger.LogWarning("Missing X-Vendor-Signature header for vendor {VendorId}", vendorId);
-            context.Result = new UnauthorizedObjectResult(new { detail = "X-Vendor-Signature header is required" });
+            context.Result = new UnauthorizedResult();
             return;
         }
 
