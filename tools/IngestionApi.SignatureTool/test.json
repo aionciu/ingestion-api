@@ -1,0 +1,12 @@
+{
+  "operationId": "op-001",
+  "bagId": "bag-001",
+  "bags": [
+    {
+      "declaredValue": 100.00,
+      "processedValue": 0.00,
+      "differenceValue": 0.00,
+      "currency": "USD"
+    }
+  ]
+}
