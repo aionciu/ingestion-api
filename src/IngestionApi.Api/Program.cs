@@ -1,4 +1,6 @@
+using IngestionApi.Api.Filters;
 using IngestionApi.Api.Middleware;
+using IngestionApi.Api.Options;
 using IngestionApi.Api.Startup;
 using IngestionApi.Application;
 using IngestionApi.Infrastructure;
@@ -16,6 +18,10 @@ builder.Services.AddOpenApi();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddHostedService<DatabaseStartupCheck>();
+builder.Services.Configure<VendorCertificateOptions>(
+    builder.Configuration.GetSection("VendorCertificates"));
+builder.Services.AddSingleton<ICertificateLoader, WindowsCertificateLoader>();
+builder.Services.AddScoped<VendorSignatureFilter>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException(

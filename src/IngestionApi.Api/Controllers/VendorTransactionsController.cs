@@ -1,5 +1,6 @@
 using FluentValidation;
 using IngestionApi.Api.Contracts;
+using IngestionApi.Api.Filters;
 using IngestionApi.Application.Common;
 using IngestionApi.Application.Features.Transactions.Commands;
 using IngestionApi.Application.Features.Transactions.DTOs;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace IngestionApi.Api.Controllers;
 
+[ServiceFilter(typeof(VendorSignatureFilter))]
 [ApiController]
 [Route("api/vendor-transactions")]
 public class VendorTransactionsController : ControllerBase
