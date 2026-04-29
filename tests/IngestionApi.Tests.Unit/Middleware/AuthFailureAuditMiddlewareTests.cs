@@ -44,4 +44,23 @@ public class AuthFailureAuditMiddlewareTests
         var (_, log) = await Run(200);
         Assert.Empty(log.Entries);
     }
+
+    [Fact]
+    public async Task Unauthorized_EmitsWarningWithEnvelopeFields()
+    {
+        var (_, log) = await Run(401, ctx =>
+        {
+            ctx.Request.QueryString = new QueryString("?a=1");
+            ctx.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("10.0.0.5");
+        });
+
+        var entry = Assert.Single(log.Entries);
+        Assert.Equal(LogLevel.Warning, entry.Level);
+
+        var dict = entry.State.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        Assert.Equal("POST", dict["Method"]);
+        Assert.Equal("/api/x", dict["Path"]);
+        Assert.Equal("?a=1", dict["QueryString"]);
+        Assert.Equal("10.0.0.5", dict["RemoteIp"]);
+    }
 }

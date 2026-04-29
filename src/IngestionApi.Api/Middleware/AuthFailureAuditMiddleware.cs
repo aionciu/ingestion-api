@@ -20,5 +20,15 @@ public class AuthFailureAuditMiddleware
         {
             return;
         }
+
+        var request = context.Request;
+        var method = request.Method;
+        var path = request.Path.Value ?? string.Empty;
+        var queryString = request.QueryString.Value ?? string.Empty;
+        var remoteIp = context.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
+
+        _logger.LogWarning(
+            "401 audit: {Method} {Path}{QueryString} from {RemoteIp}",
+            method, path, queryString, remoteIp);
     }
 }
