@@ -1,5 +1,4 @@
 using IngestionApi.Infrastructure.Persistence;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace IngestionApi.Api.Startup;
 
