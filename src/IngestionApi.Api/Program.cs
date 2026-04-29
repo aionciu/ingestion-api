@@ -56,4 +56,5 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 
 app.Run();
 
+[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 public partial class Program { }
