@@ -1,7 +1,9 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography.X509Certificates;
 
 namespace IngestionApi.Api.Filters;
 
+[ExcludeFromCodeCoverage]
 public class WindowsCertificateLoader : ICertificateLoader
 {
     public X509Certificate2? Load(string thumbprint)
