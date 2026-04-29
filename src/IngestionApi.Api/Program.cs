@@ -1,4 +1,5 @@
 using IngestionApi.Api.Middleware;
+using IngestionApi.Api.Startup;
 using IngestionApi.Application;
 using IngestionApi.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -14,6 +15,7 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddHostedService<DatabaseStartupCheck>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException(
