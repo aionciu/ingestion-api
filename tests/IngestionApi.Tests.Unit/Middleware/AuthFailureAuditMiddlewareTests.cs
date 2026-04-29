@@ -63,4 +63,39 @@ public class AuthFailureAuditMiddlewareTests
         Assert.Equal("?a=1", dict["QueryString"]);
         Assert.Equal("10.0.0.5", dict["RemoteIp"]);
     }
+
+    [Fact]
+    public async Task Unauthorized_RedactsSensitiveHeaders()
+    {
+        var (_, log) = await Run(401, ctx =>
+        {
+            ctx.Request.Headers["Authorization"] = "Bearer secret";
+            ctx.Request.Headers["Cookie"] = "session=abc";
+            ctx.Request.Headers["X-Vendor-Id"] = "vendor-001";
+        });
+
+        var entry = Assert.Single(log.Entries);
+        var dict = entry.State.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        var headers = Assert.IsAssignableFrom<IDictionary<string, string>>(dict["@Headers"]);
+
+        Assert.Equal("***", headers["Authorization"]);
+        Assert.Equal("***", headers["Cookie"]);
+        Assert.Equal("vendor-001", headers["X-Vendor-Id"]);
+    }
+
+    [Fact]
+    public async Task Unauthorized_TruncatesVendorSignature()
+    {
+        var sig = new string('A', 200);
+        var (_, log) = await Run(401, ctx =>
+        {
+            ctx.Request.Headers["X-Vendor-Signature"] = sig;
+        });
+
+        var entry = Assert.Single(log.Entries);
+        var dict = entry.State.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        var headers = (IDictionary<string, string>)dict["@Headers"]!;
+
+        Assert.Equal("AAAAAAAA…(len=200)", headers["X-Vendor-Signature"]);
+    }
 }
