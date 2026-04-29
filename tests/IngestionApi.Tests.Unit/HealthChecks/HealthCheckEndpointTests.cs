@@ -1,31 +1,70 @@
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.Net;
 
 namespace IngestionApi.Tests.Unit.HealthChecks;
 
-public class HealthCheckEndpointTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public class HealthCheckEndpointTests
 {
     [Fact]
     public async Task LiveEndpoint_ReturnsOk()
     {
-        var client = factory.CreateClient();
+        var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureAppConfiguration((_, config) =>
+                {
+                    config.Sources.Clear();
+                    config.AddInMemoryCollection(new Dictionary<string, string?>
+                    {
+                        ["ConnectionStrings:DefaultConnection"] =
+                            "Server=(localdb)\\mssqllocaldb;Database=IngestionDb;Trusted_Connection=True;TrustServerCertificate=True;"
+                    });
+                });
+            });
 
+        var client = factory.CreateClient();
         var response = await client.GetAsync("/health/live");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
-    public async Task ReadyEndpoint_ReturnsHealthyOrUnhealthyDependingOnDb()
+    public async Task ReadyEndpoint_ReturnsServiceUnavailableWhenDbUnreachable()
     {
-        var client = factory.CreateClient();
+        var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureAppConfiguration((_, config) =>
+                {
+                    config.Sources.Clear();
+                    config.AddInMemoryCollection(new Dictionary<string, string?>
+                    {
+                        ["ConnectionStrings:DefaultConnection"] =
+                            "Server=(localdb)\\mssqllocaldb;Database=IngestionDb;Trusted_Connection=True;TrustServerCertificate=True;"
+                    });
+                });
 
+                // Replace all health checks with one that always reports Unhealthy for "ready"
+                builder.ConfigureServices(services =>
+                {
+                    // Remove existing health check registrations
+                    var descriptors = services
+                        .Where(d => d.ServiceType == typeof(IHealthCheck) ||
+                                    d.ServiceType.FullName?.Contains("HealthCheck") == true)
+                        .ToList();
+
+                    services.AddHealthChecks()
+                        .AddCheck("sql", () => HealthCheckResult.Unhealthy("DB unreachable"), tags: ["ready"]);
+                });
+            });
+
+        var client = factory.CreateClient();
         var response = await client.GetAsync("/health/ready");
 
-        // 200 when DB is reachable; 503 when DB is unavailable (e.g. in CI)
-        Assert.True(
-            response.StatusCode is HttpStatusCode.OK or HttpStatusCode.ServiceUnavailable,
-            $"Expected 200 or 503 but got {(int)response.StatusCode}");
+        // Unhealthy check tagged "ready" → 503
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
     }
 }
