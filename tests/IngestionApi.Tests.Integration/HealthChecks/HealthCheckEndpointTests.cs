@@ -4,14 +4,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.Net;
 
-namespace IngestionApi.Tests.Unit.HealthChecks;
+namespace IngestionApi.Tests.Integration.HealthChecks;
 
 public class HealthCheckEndpointTests
 {
     [Fact]
     public async Task LiveEndpoint_ReturnsOk()
     {
-        var factory = new WebApplicationFactory<Program>()
+        await using var factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
                 builder.ConfigureAppConfiguration((_, config) =>
@@ -34,7 +34,7 @@ public class HealthCheckEndpointTests
     [Fact]
     public async Task ReadyEndpoint_ReturnsServiceUnavailableWhenDbUnreachable()
     {
-        var factory = new WebApplicationFactory<Program>()
+        await using var factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
                 builder.ConfigureAppConfiguration((_, config) =>
@@ -47,7 +47,6 @@ public class HealthCheckEndpointTests
                     });
                 });
 
-                // Replace all health checks with one that always reports Unhealthy for "ready"
                 builder.ConfigureServices(services =>
                 {
                     services.AddHealthChecks()
@@ -58,7 +57,6 @@ public class HealthCheckEndpointTests
         var client = factory.CreateClient();
         var response = await client.GetAsync("/health/ready");
 
-        // Unhealthy check tagged "ready" → 503
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
     }
 }
