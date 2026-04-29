@@ -15,11 +15,12 @@ builder.Services.AddOpenApi();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException(
-        "Connection string 'DefaultConnection' is not configured.");
-builder.Services.AddHealthChecks()
-    .AddSqlServer(connectionString, tags: ["ready"]);
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var healthChecksBuilder = builder.Services.AddHealthChecks();
+if (!string.IsNullOrEmpty(connectionString))
+{
+    healthChecksBuilder.AddSqlServer(connectionString, tags: ["ready"]);
+}
 
 var app = builder.Build();
 
@@ -47,3 +48,5 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 });
 
 app.Run();
+
+public partial class Program { }
