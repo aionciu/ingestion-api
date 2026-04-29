@@ -9,4 +9,7 @@
     <Project Path="tests/IngestionApi.Tests.Unit/IngestionApi.Tests.Unit.csproj" />
     <Project Path="tests/IngestionApi.Tests.Integration/IngestionApi.Tests.Integration.csproj" />
   </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/IngestionApi.SignatureTool/IngestionApi.SignatureTool.csproj" />
+  </Folder>
 </Solution>
