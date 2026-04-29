@@ -50,12 +50,6 @@ public class HealthCheckEndpointTests
                 // Replace all health checks with one that always reports Unhealthy for "ready"
                 builder.ConfigureServices(services =>
                 {
-                    // Remove existing health check registrations
-                    var descriptors = services
-                        .Where(d => d.ServiceType == typeof(IHealthCheck) ||
-                                    d.ServiceType.FullName?.Contains("HealthCheck") == true)
-                        .ToList();
-
                     services.AddHealthChecks()
                         .AddCheck("sql", () => HealthCheckResult.Unhealthy("DB unreachable"), tags: ["ready"]);
                 });
