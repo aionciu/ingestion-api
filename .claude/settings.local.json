@@ -46,7 +46,8 @@
       "Bash(dotnet script *)",
       "Bash(dotnet *)",
       "Bash(dotnet-script)",
-      "Bash(echo \"exit: $?\")"
+      "Bash(echo \"exit: $?\")",
+      "Bash(reportgenerator -reports:\"./TestResults/**/coverage.cobertura.xml\" -targetdir:\"./TestResults/coverage-report\" -reporttypes:\"TextSummary;Html\")"
     ]
   }
 }

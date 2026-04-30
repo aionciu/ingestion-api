@@ -34,6 +34,7 @@ var app = builder.Build();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<RequestResponseLoggingMiddleware>();
+app.UseMiddleware<AuthFailureAuditMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
