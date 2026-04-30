@@ -1,7 +1,6 @@
 using IngestionApi.Api.Middleware;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace IngestionApi.Tests.Unit.Middleware;
 
@@ -85,13 +84,11 @@ public class AuthFailureAuditMiddlewareTests
 
         var entry = Assert.Single(log.Entries);
         var dict = entry.State.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        var headersJson = Assert.IsType<string>(dict["HeadersJson"]);
-        var headers = JsonSerializer.Deserialize<Dictionary<string, string>>(headersJson)!;
+        var headers = Assert.IsAssignableFrom<IDictionary<string, string>>(dict["@Headers"]);
 
         Assert.Equal("***", headers["Authorization"]);
         Assert.Equal("***", headers["Cookie"]);
         Assert.Equal("vendor-001", headers["X-Vendor-Id"]);
-        Assert.Contains("\n  \"Authorization\": \"***\"", headersJson);
     }
 
     [Fact]
@@ -105,8 +102,7 @@ public class AuthFailureAuditMiddlewareTests
 
         var entry = Assert.Single(log.Entries);
         var dict = entry.State.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        var headersJson = Assert.IsType<string>(dict["HeadersJson"]);
-        var headers = JsonSerializer.Deserialize<Dictionary<string, string>>(headersJson)!;
+        var headers = (IDictionary<string, string>)dict["@Headers"]!;
 
         Assert.Equal("AAAAAAAA…(len=200)", headers["X-Vendor-Signature"]);
     }

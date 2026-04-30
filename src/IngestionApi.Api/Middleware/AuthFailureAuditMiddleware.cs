@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 namespace IngestionApi.Api.Middleware;
 
 public class AuthFailureAuditMiddleware
@@ -7,10 +5,6 @@ public class AuthFailureAuditMiddleware
     private const int MaxBodyBytes = 8192;
     private const string SignatureHeader = "X-Vendor-Signature";
     private const string JsonContentTypePrefix = "application/json";
-    private static readonly JsonSerializerOptions JsonLogOptions = new()
-    {
-        WriteIndented = true,
-    };
     private static readonly HashSet<string> SensitiveHeaders = new(StringComparer.OrdinalIgnoreCase)
     {
         "Authorization",
@@ -44,12 +38,11 @@ public class AuthFailureAuditMiddleware
         var queryString = request.QueryString.Value ?? string.Empty;
         var remoteIp = context.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
         var headers = RedactHeaders(request.Headers);
-        var headersJson = JsonSerializer.Serialize(headers, JsonLogOptions);
         var (body, bodyTruncated, bodyTotalBytes) = await ReadBodyAsync(request);
 
         _logger.LogWarning(
-            "401 audit: {Method} {Path}{QueryString} from {RemoteIp}\nheaders={HeadersJson}\nbody={Body}\ntruncated={BodyTruncated} totalBytes={BodyTotalBytes}",
-            method, path, queryString, remoteIp, headersJson, body, bodyTruncated, bodyTotalBytes);
+            "401 audit: {Method} {Path}{QueryString} from {RemoteIp} headers={@Headers} body={Body} truncated={BodyTruncated} totalBytes={BodyTotalBytes}",
+            method, path, queryString, remoteIp, headers, body, bodyTruncated, bodyTotalBytes);
     }
 
     private static IDictionary<string, string> RedactHeaders(IHeaderDictionary source)
