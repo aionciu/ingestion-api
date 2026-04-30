@@ -129,7 +129,7 @@ public class AuthFailureAuditMiddlewareTests
         var entry = Assert.Single(log.Entries);
         var dict = entry.State.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         var logged = Assert.IsType<string>(dict["Body"]);
-        Assert.Equal(8192, System.Text.Encoding.UTF8.GetByteCount(logged));
+        Assert.Equal(AuthFailureAuditMiddleware.MaxBodyBytes, System.Text.Encoding.UTF8.GetByteCount(logged));
         Assert.Equal(true, dict["BodyTruncated"]);
         Assert.Equal((long)10000, dict["BodyTotalBytes"]);
     }

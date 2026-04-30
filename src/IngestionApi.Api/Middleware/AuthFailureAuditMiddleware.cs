@@ -1,8 +1,10 @@
+using System.Text;
+
 namespace IngestionApi.Api.Middleware;
 
 public class AuthFailureAuditMiddleware
 {
-    private const int MaxBodyBytes = 8192;
+    internal const int MaxBodyBytes = 8192;
     private const string SignatureHeader = "X-Vendor-Signature";
     private const string JsonContentTypePrefix = "application/json";
     private static readonly HashSet<string> SensitiveHeaders = new(StringComparer.OrdinalIgnoreCase)
@@ -11,6 +13,8 @@ public class AuthFailureAuditMiddleware
         "Cookie",
         "Set-Cookie",
         "Proxy-Authorization",
+        "X-Forwarded-Authorization",
+        "X-Original-Authorization",
     };
 
     private readonly RequestDelegate _next;
@@ -83,10 +87,7 @@ public class AuthFailureAuditMiddleware
             return ("[non-json content omitted]", false, contentLength);
         }
 
-        if (request.Body.CanSeek)
-        {
-            request.Body.Position = 0;
-        }
+        request.Body.Position = 0;
 
         var buffer = new byte[MaxBodyBytes];
         var read = 0;
@@ -103,12 +104,10 @@ public class AuthFailureAuditMiddleware
 
         var truncated = contentLength > MaxBodyBytes;
         var totalBytes = truncated ? contentLength : read;
-        var body = System.Text.Encoding.UTF8.GetString(buffer, 0, read);
+        // Byte-based truncation may split a multi-byte UTF-8 sequence at the cap; replacement char acceptable for diagnostics.
+        var body = Encoding.UTF8.GetString(buffer, 0, read);
 
-        if (request.Body.CanSeek)
-        {
-            request.Body.Position = 0;
-        }
+        request.Body.Position = 0;
 
         return (body, truncated, totalBytes);
     }
