@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using FluentValidation;
 using IngestionApi.Api.Contracts;
 using IngestionApi.Api.Filters;
@@ -11,7 +12,8 @@ namespace IngestionApi.Api.Controllers;
 
 [ServiceFilter(typeof(VendorSignatureFilter))]
 [ApiController]
-[Route("api/vendor-transactions")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/vendor-transactions")]
 public class VendorTransactionsController : ControllerBase
 {
     private readonly ICommandHandler<CreateTransactionTCommand> _createTransactionTHandler;

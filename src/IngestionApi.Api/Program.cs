@@ -1,3 +1,5 @@
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using IngestionApi.Api.Filters;
 using IngestionApi.Api.Middleware;
 using IngestionApi.Api.Options;
@@ -14,7 +16,32 @@ builder.Host.UseSerilog((ctx, lc) => lc
     .Enrich.FromLogContext());
 
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+
+builder.Services
+    .AddApiVersioning(options =>
+    {
+        options.DefaultApiVersion = new ApiVersion(1, 0);
+        options.AssumeDefaultVersionWhenUnspecified = false;
+        options.ReportApiVersions = true;
+        options.ApiVersionReader = new UrlSegmentApiVersionReader();
+    })
+    .AddMvc()
+    .AddApiExplorer(options =>
+    {
+        options.GroupNameFormat = "'v'VVV";
+        options.SubstituteApiVersionInUrl = true;
+    });
+
+// Register one OpenAPI document per discovered API version.
+using (var sp = builder.Services.BuildServiceProvider())
+{
+    var provider = sp.GetRequiredService<IApiVersionDescriptionProvider>();
+    foreach (var description in provider.ApiVersionDescriptions)
+    {
+        builder.Services.AddOpenApi(description.GroupName);
+    }
+}
+
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddHostedService<DatabaseStartupCheck>();
@@ -38,7 +65,7 @@ app.UseMiddleware<AuthFailureAuditMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.MapOpenApi("/openapi/{documentName}.json");
 }
 
 app.UseHttpsRedirection();
